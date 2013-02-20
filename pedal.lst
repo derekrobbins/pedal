@@ -1,0 +1,749 @@
+   1               		.file	"pedal.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.section	.text.startup,"ax",@progbits
+  10               	.global	main
+  12               	main:
+  13               	.LFB0:
+  14               		.file 1 "pedal.c"
+   1:pedal.c       **** #include <avr/io.h>
+   2:pedal.c       **** #include <avr/interrupt.h>
+   3:pedal.c       **** 
+   4:pedal.c       **** const BOUNCETIME = 20000;
+   5:pedal.c       **** 
+   6:pedal.c       **** volatile int quarter 	 = 15000;
+   7:pedal.c       **** volatile int triplet 	 = 1;
+   8:pedal.c       **** volatile int dbltime 	 = 1; 
+   9:pedal.c       **** volatile int dblstate 	 = 0;
+  10:pedal.c       **** volatile int triplestate = 0;
+  11:pedal.c       **** volatile int active 	 = 0;
+  12:pedal.c       **** volatile int counter 	 = 0;
+  13:pedal.c       **** volatile int remainder 	 = 0;
+  14:pedal.c       **** volatile int index 	 = 0;
+  15:pedal.c       **** volatile int taps[4];
+  16:pedal.c       **** 
+  17:pedal.c       **** void debounce();
+  18:pedal.c       **** 
+  19:pedal.c       **** void main(void)
+  20:pedal.c       **** {
+  15               		.loc 1 20 0
+  16               	/* prologue: function */
+  17               	/* frame size = 0 */
+  18               	/* stack size = 0 */
+  19               	.L__stack_usage = 0
+  21:pedal.c       **** 	/*
+  22:pedal.c       **** 	Setup timer0 as debounbe timer. Timer is set to roughly 2ms.
+  23:pedal.c       **** 	*/
+  24:pedal.c       **** 	OCR0B	|= BOUNCETIME;				// Set compare register B to 2ms
+  20               		.loc 1 24 0
+  21 0000 88B5      		in r24,0x28
+  22 0002 8062      		ori r24,lo8(32)
+  23 0004 88BD      		out 0x28,r24
+  25:pedal.c       **** 	TIMSK0	|= (1 << OCIE1B);			// Fire interrupter when timer0 reaches the time set in compare registe
+  24               		.loc 1 25 0
+  25 0006 8091 6E00 		lds r24,110
+  26 000a 8460      		ori r24,lo8(4)
+  27 000c 8093 6E00 		sts 110,r24
+  26:pedal.c       **** 	TCCR0B 	|= (1 << WGM12);			// Set timer 0 to "Clear Timer on Compare" Mode
+  28               		.loc 1 26 0
+  29 0010 85B5      		in r24,0x25
+  30 0012 8860      		ori r24,lo8(8)
+  31 0014 85BD      		out 0x25,r24
+  27:pedal.c       **** 	TCCR0B 	|= (1 << CS10);				// Start timer
+  32               		.loc 1 27 0
+  33 0016 85B5      		in r24,0x25
+  34 0018 8160      		ori r24,lo8(1)
+  35 001a 85BD      		out 0x25,r24
+  28:pedal.c       **** 
+  29:pedal.c       **** 	/*
+  30:pedal.c       **** 	Setup timer1 as main timer to control signal output. This timer is based
+  31:pedal.c       **** 	around the quarter note tempo tapped in via pin 2 of port D
+  32:pedal.c       **** 	*/
+  33:pedal.c       **** 	OCR1A 	 = quarter / (4 * dbltime * triplet);	// Set CTC compare value
+  36               		.loc 1 33 0
+  37 001c 8091 0000 		lds r24,quarter
+  38 0020 9091 0000 		lds r25,quarter+1
+  39 0024 2091 0000 		lds r18,dbltime
+  40 0028 3091 0000 		lds r19,dbltime+1
+  41 002c 4091 0000 		lds r20,triplet
+  42 0030 5091 0000 		lds r21,triplet+1
+  43 0034 220F      		lsl r18
+  44 0036 331F      		rol r19
+  45 0038 220F      		lsl r18
+  46 003a 331F      		rol r19
+  47 003c 249F      		mul r18,r20
+  48 003e B001      		movw r22,r0
+  49 0040 259F      		mul r18,r21
+  50 0042 700D      		add r23,r0
+  51 0044 349F      		mul r19,r20
+  52 0046 700D      		add r23,r0
+  53 0048 1124      		clr r1
+  54 004a 0E94 0000 		call __divmodhi4
+  55 004e 7093 8900 		sts 136+1,r23
+  56 0052 6093 8800 		sts 136,r22
+  34:pedal.c       **** 	TCCR1A 	|= (1 << COM1A0);			// Set timer 1 compare output channel A in toggle mode
+  57               		.loc 1 34 0
+  58 0056 8091 8000 		lds r24,128
+  59 005a 8064      		ori r24,lo8(64)
+  60 005c 8093 8000 		sts 128,r24
+  35:pedal.c       **** 	TCCR1B 	|= ((1 << CS10) | (1 << CS11));		// Start timer at frequency/64
+  61               		.loc 1 35 0
+  62 0060 8091 8100 		lds r24,129
+  63 0064 8360      		ori r24,lo8(3)
+  64 0066 8093 8100 		sts 129,r24
+  36:pedal.c       **** 	TCCR1B 	|= (1 << WGM12);			// Set timer 1 to "Clear Timer on Compare" Mode
+  65               		.loc 1 36 0
+  66 006a 8091 8100 		lds r24,129
+  67 006e 8860      		ori r24,lo8(8)
+  68 0070 8093 8100 		sts 129,r24
+  37:pedal.c       **** 
+  38:pedal.c       **** 	/*
+  39:pedal.c       **** 	Set up I/O pins
+  40:pedal.c       **** 	*/
+  41:pedal.c       **** 	// Port B
+  42:pedal.c       **** 	DDRB 	|= (1 << 1);				// Set pin 1 of port B as output
+  69               		.loc 1 42 0
+  70 0074 219A      		sbi 0x4,1
+  43:pedal.c       **** 	PORTB 	|= (1 << 0);				// Set pin 0 of port B to on state
+  71               		.loc 1 43 0
+  72 0076 289A      		sbi 0x5,0
+  44:pedal.c       **** 	// Port D
+  45:pedal.c       **** 	DDRD 	|= 0b11100011;				// Set pins 2, 3, and 4 of port D as input, everything else to output
+  73               		.loc 1 45 0
+  74 0078 8AB1      		in r24,0xa
+  75 007a 836E      		ori r24,lo8(-29)
+  76 007c 8AB9      		out 0xa,r24
+  46:pedal.c       **** 	PORTD	|= (0 << 7);				// Set pin 7 of port D to off state
+  77               		.loc 1 46 0
+  78 007e 8BB1      		in r24,0xb
+  79 0080 8BB9      		out 0xb,r24
+  47:pedal.c       **** 
+  48:pedal.c       **** 	EIMSK	|= (1 << INT0) | (1 << INT1);		// Enable INT0 and INT 1 (pins 2 and 3 of port D)
+  80               		.loc 1 48 0
+  81 0082 8DB3      		in r24,0x1d
+  82 0084 8360      		ori r24,lo8(3)
+  83 0086 8DBB      		out 0x1d,r24
+  49:pedal.c       **** 	EICRA	|= (1 << ISC00) | (1 << ISC10);		// Trigger on rising edge of INT0 and state change of INT 1
+  84               		.loc 1 49 0
+  85 0088 8091 6900 		lds r24,105
+  86 008c 8560      		ori r24,lo8(5)
+  87 008e 8093 6900 		sts 105,r24
+  50:pedal.c       **** 	PCMSK2  |= (1 << PCINT20);			// Enable interuptor on PCINT20 (pin 4 of port D)
+  88               		.loc 1 50 0
+  89 0092 8091 6D00 		lds r24,109
+  90 0096 8061      		ori r24,lo8(16)
+  91 0098 8093 6D00 		sts 109,r24
+  51:pedal.c       **** 	PCICR	|= (1 << PCIE2); 
+  92               		.loc 1 51 0
+  93 009c 8091 6800 		lds r24,104
+  94 00a0 8460      		ori r24,lo8(4)
+  95 00a2 8093 6800 		sts 104,r24
+  52:pedal.c       **** 
+  53:pedal.c       **** 	sei();						// Globally enable interrupts
+  96               		.loc 1 53 0
+  97               	/* #APP */
+  98               	 ;  53 "pedal.c" 1
+  99 00a6 7894      		sei
+ 100               	 ;  0 "" 2
+ 101               	/* #NOAPP */
+ 102               	.L2:
+ 103 00a8 00C0      		rjmp .L2
+ 104               	.LFE0:
+ 106               		.text
+ 107               	.global	__vector_5
+ 109               	__vector_5:
+ 110               	.LFB1:
+  54:pedal.c       **** 
+  55:pedal.c       **** 	while (1);
+  56:pedal.c       **** }
+  57:pedal.c       **** 
+  58:pedal.c       **** // Double time switch interrupter for pin 4 of port D
+  59:pedal.c       **** ISR(PCINT2_vect)
+  60:pedal.c       **** {
+ 111               		.loc 1 60 0
+ 112 0000 1F92      		push r1
+ 113               	.LCFI0:
+ 114 0002 0F92      		push r0
+ 115               	.LCFI1:
+ 116 0004 0FB6      		in r0,__SREG__
+ 117 0006 0F92      		push r0
+ 118 0008 1124      		clr __zero_reg__
+ 119 000a 2F93      		push r18
+ 120               	.LCFI2:
+ 121 000c 3F93      		push r19
+ 122               	.LCFI3:
+ 123 000e 4F93      		push r20
+ 124               	.LCFI4:
+ 125 0010 5F93      		push r21
+ 126               	.LCFI5:
+ 127 0012 6F93      		push r22
+ 128               	.LCFI6:
+ 129 0014 7F93      		push r23
+ 130               	.LCFI7:
+ 131 0016 8F93      		push r24
+ 132               	.LCFI8:
+ 133 0018 9F93      		push r25
+ 134               	.LCFI9:
+ 135 001a AF93      		push r26
+ 136               	.LCFI10:
+ 137 001c BF93      		push r27
+ 138               	.LCFI11:
+ 139               	/* prologue: Signal */
+ 140               	/* frame size = 0 */
+ 141               	/* stack size = 13 */
+ 142               	.L__stack_usage = 13
+  61:pedal.c       **** 	int newstate = PIND & (1 << PD4);
+ 143               		.loc 1 61 0
+ 144 001e 89B1      		in r24,0x9
+ 145 0020 8071      		andi r24,lo8(16)
+ 146 0022 90E0      		ldi r25,0
+ 147               	.LVL0:
+  62:pedal.c       **** 	if (dblstate != newstate) {
+ 148               		.loc 1 62 0
+ 149 0024 2091 0000 		lds r18,dblstate
+ 150 0028 3091 0000 		lds r19,dblstate+1
+ 151 002c 2817      		cp r18,r24
+ 152 002e 3907      		cpc r19,r25
+ 153 0030 01F0      		breq .L3
+  63:pedal.c       **** 		if (newstate) {
+ 154               		.loc 1 63 0
+ 155 0032 0097      		sbiw r24,0
+ 156 0034 01F0      		breq .L5
+  64:pedal.c       **** 			dbltime = 2;
+ 157               		.loc 1 64 0
+ 158 0036 22E0      		ldi r18,lo8(2)
+ 159 0038 30E0      		ldi r19,0
+ 160 003a 00C0      		rjmp .L7
+ 161               	.L5:
+  65:pedal.c       **** 		} else {
+  66:pedal.c       **** 			dbltime = 1;
+ 162               		.loc 1 66 0
+ 163 003c 21E0      		ldi r18,lo8(1)
+ 164 003e 30E0      		ldi r19,0
+ 165               	.L7:
+ 166 0040 3093 0000 		sts dbltime+1,r19
+ 167 0044 2093 0000 		sts dbltime,r18
+  67:pedal.c       **** 		}
+  68:pedal.c       **** 		dblstate = newstate;
+ 168               		.loc 1 68 0
+ 169 0048 9093 0000 		sts dblstate+1,r25
+ 170 004c 8093 0000 		sts dblstate,r24
+  69:pedal.c       **** 		OCR1A 	 = quarter / (2 * dbltime * triplet);	// Set CTC compare value
+ 171               		.loc 1 69 0
+ 172 0050 8091 0000 		lds r24,quarter
+ 173 0054 9091 0000 		lds r25,quarter+1
+ 174               	.LVL1:
+ 175 0058 2091 0000 		lds r18,dbltime
+ 176 005c 3091 0000 		lds r19,dbltime+1
+ 177 0060 4091 0000 		lds r20,triplet
+ 178 0064 5091 0000 		lds r21,triplet+1
+ 179 0068 220F      		lsl r18
+ 180 006a 331F      		rol r19
+ 181 006c 249F      		mul r18,r20
+ 182 006e B001      		movw r22,r0
+ 183 0070 259F      		mul r18,r21
+ 184 0072 700D      		add r23,r0
+ 185 0074 349F      		mul r19,r20
+ 186 0076 700D      		add r23,r0
+ 187 0078 1124      		clr r1
+ 188 007a 0E94 0000 		call __divmodhi4
+ 189 007e 7093 8900 		sts 136+1,r23
+ 190 0082 6093 8800 		sts 136,r22
+  70:pedal.c       **** 		TCNT1 	 = 0;
+ 191               		.loc 1 70 0
+ 192 0086 1092 8500 		sts 132+1,__zero_reg__
+ 193 008a 1092 8400 		sts 132,__zero_reg__
+ 194               	.LVL2:
+ 195               	.L3:
+ 196               	/* epilogue start */
+  71:pedal.c       **** 	}
+  72:pedal.c       **** }
+ 197               		.loc 1 72 0
+ 198 008e BF91      		pop r27
+ 199 0090 AF91      		pop r26
+ 200 0092 9F91      		pop r25
+ 201 0094 8F91      		pop r24
+ 202 0096 7F91      		pop r23
+ 203 0098 6F91      		pop r22
+ 204 009a 5F91      		pop r21
+ 205 009c 4F91      		pop r20
+ 206 009e 3F91      		pop r19
+ 207 00a0 2F91      		pop r18
+ 208 00a2 0F90      		pop r0
+ 209 00a4 0FBE      		out __SREG__,r0
+ 210 00a6 0F90      		pop r0
+ 211 00a8 1F90      		pop r1
+ 212 00aa 1895      		reti
+ 213               	.LFE1:
+ 215               	.global	__vector_2
+ 217               	__vector_2:
+ 218               	.LFB2:
+  73:pedal.c       **** 
+  74:pedal.c       **** // Triplet switch interrupter for pin 3 of port D
+  75:pedal.c       **** ISR(INT1_vect)
+  76:pedal.c       **** {
+ 219               		.loc 1 76 0
+ 220 00ac 1F92      		push r1
+ 221               	.LCFI12:
+ 222 00ae 0F92      		push r0
+ 223               	.LCFI13:
+ 224 00b0 0FB6      		in r0,__SREG__
+ 225 00b2 0F92      		push r0
+ 226 00b4 1124      		clr __zero_reg__
+ 227 00b6 2F93      		push r18
+ 228               	.LCFI14:
+ 229 00b8 3F93      		push r19
+ 230               	.LCFI15:
+ 231 00ba 4F93      		push r20
+ 232               	.LCFI16:
+ 233 00bc 5F93      		push r21
+ 234               	.LCFI17:
+ 235 00be 6F93      		push r22
+ 236               	.LCFI18:
+ 237 00c0 7F93      		push r23
+ 238               	.LCFI19:
+ 239 00c2 8F93      		push r24
+ 240               	.LCFI20:
+ 241 00c4 9F93      		push r25
+ 242               	.LCFI21:
+ 243 00c6 AF93      		push r26
+ 244               	.LCFI22:
+ 245 00c8 BF93      		push r27
+ 246               	.LCFI23:
+ 247               	/* prologue: Signal */
+ 248               	/* frame size = 0 */
+ 249               	/* stack size = 13 */
+ 250               	.L__stack_usage = 13
+  77:pedal.c       **** 	int newstate = PIND & (1 << PD3);
+ 251               		.loc 1 77 0
+ 252 00ca 89B1      		in r24,0x9
+ 253 00cc 8870      		andi r24,lo8(8)
+ 254 00ce 90E0      		ldi r25,0
+ 255               	.LVL3:
+  78:pedal.c       **** 	if (triplestate != newstate) {
+ 256               		.loc 1 78 0
+ 257 00d0 2091 0000 		lds r18,triplestate
+ 258 00d4 3091 0000 		lds r19,triplestate+1
+ 259 00d8 2817      		cp r18,r24
+ 260 00da 3907      		cpc r19,r25
+ 261 00dc 01F0      		breq .L8
+  79:pedal.c       **** 		if (newstate) {
+ 262               		.loc 1 79 0
+ 263 00de 0097      		sbiw r24,0
+ 264 00e0 01F0      		breq .L10
+  80:pedal.c       **** 			triplet = 3;
+ 265               		.loc 1 80 0
+ 266 00e2 23E0      		ldi r18,lo8(3)
+ 267 00e4 30E0      		ldi r19,0
+ 268 00e6 00C0      		rjmp .L12
+ 269               	.L10:
+  81:pedal.c       **** 		} else {
+  82:pedal.c       **** 			triplet = 1;
+ 270               		.loc 1 82 0
+ 271 00e8 21E0      		ldi r18,lo8(1)
+ 272 00ea 30E0      		ldi r19,0
+ 273               	.L12:
+ 274 00ec 3093 0000 		sts triplet+1,r19
+ 275 00f0 2093 0000 		sts triplet,r18
+  83:pedal.c       **** 		}
+  84:pedal.c       **** 		triplestate = newstate;
+ 276               		.loc 1 84 0
+ 277 00f4 9093 0000 		sts triplestate+1,r25
+ 278 00f8 8093 0000 		sts triplestate,r24
+  85:pedal.c       **** 		OCR1A 	    = quarter / (2 * dbltime * triplet);	// Set CTC compare value
+ 279               		.loc 1 85 0
+ 280 00fc 8091 0000 		lds r24,quarter
+ 281 0100 9091 0000 		lds r25,quarter+1
+ 282               	.LVL4:
+ 283 0104 2091 0000 		lds r18,dbltime
+ 284 0108 3091 0000 		lds r19,dbltime+1
+ 285 010c 4091 0000 		lds r20,triplet
+ 286 0110 5091 0000 		lds r21,triplet+1
+ 287 0114 220F      		lsl r18
+ 288 0116 331F      		rol r19
+ 289 0118 249F      		mul r18,r20
+ 290 011a B001      		movw r22,r0
+ 291 011c 259F      		mul r18,r21
+ 292 011e 700D      		add r23,r0
+ 293 0120 349F      		mul r19,r20
+ 294 0122 700D      		add r23,r0
+ 295 0124 1124      		clr r1
+ 296 0126 0E94 0000 		call __divmodhi4
+ 297 012a 7093 8900 		sts 136+1,r23
+ 298 012e 6093 8800 		sts 136,r22
+  86:pedal.c       **** 		TCNT1       = 0;
+ 299               		.loc 1 86 0
+ 300 0132 1092 8500 		sts 132+1,__zero_reg__
+ 301 0136 1092 8400 		sts 132,__zero_reg__
+ 302               	.LVL5:
+ 303               	.L8:
+ 304               	/* epilogue start */
+  87:pedal.c       **** 	}
+  88:pedal.c       **** }
+ 305               		.loc 1 88 0
+ 306 013a BF91      		pop r27
+ 307 013c AF91      		pop r26
+ 308 013e 9F91      		pop r25
+ 309 0140 8F91      		pop r24
+ 310 0142 7F91      		pop r23
+ 311 0144 6F91      		pop r22
+ 312 0146 5F91      		pop r21
+ 313 0148 4F91      		pop r20
+ 314 014a 3F91      		pop r19
+ 315 014c 2F91      		pop r18
+ 316 014e 0F90      		pop r0
+ 317 0150 0FBE      		out __SREG__,r0
+ 318 0152 0F90      		pop r0
+ 319 0154 1F90      		pop r1
+ 320 0156 1895      		reti
+ 321               	.LFE2:
+ 323               	.global	__vector_15
+ 325               	__vector_15:
+ 326               	.LFB4:
+  89:pedal.c       **** 
+  90:pedal.c       **** // Tap tempo interrupter for pin 2 of port D
+  91:pedal.c       **** ISR(INT0_vect)
+  92:pedal.c       **** {
+  93:pedal.c       **** 	debounce();
+  94:pedal.c       **** }
+  95:pedal.c       **** 
+  96:pedal.c       **** // Debounce interruptor, fires BOUNCETIME cycles after initial tempo interrupter
+  97:pedal.c       **** ISR(TIMER0_COMPB_vect)
+  98:pedal.c       **** {
+ 327               		.loc 1 98 0
+ 328 0158 1F92      		push r1
+ 329               	.LCFI24:
+ 330 015a 0F92      		push r0
+ 331               	.LCFI25:
+ 332 015c 0FB6      		in r0,__SREG__
+ 333 015e 0F92      		push r0
+ 334 0160 1124      		clr __zero_reg__
+ 335 0162 2F93      		push r18
+ 336               	.LCFI26:
+ 337 0164 3F93      		push r19
+ 338               	.LCFI27:
+ 339 0166 4F93      		push r20
+ 340               	.LCFI28:
+ 341 0168 5F93      		push r21
+ 342               	.LCFI29:
+ 343 016a 6F93      		push r22
+ 344               	.LCFI30:
+ 345 016c 7F93      		push r23
+ 346               	.LCFI31:
+ 347 016e 8F93      		push r24
+ 348               	.LCFI32:
+ 349 0170 9F93      		push r25
+ 350               	.LCFI33:
+ 351 0172 AF93      		push r26
+ 352               	.LCFI34:
+ 353 0174 BF93      		push r27
+ 354               	.LCFI35:
+ 355 0176 EF93      		push r30
+ 356               	.LCFI36:
+ 357 0178 FF93      		push r31
+ 358               	.LCFI37:
+ 359               	/* prologue: Signal */
+ 360               	/* frame size = 0 */
+ 361               	/* stack size = 15 */
+ 362               	.L__stack_usage = 15
+  99:pedal.c       **** 	counter++;
+ 363               		.loc 1 99 0
+ 364 017a 8091 0000 		lds r24,counter
+ 365 017e 9091 0000 		lds r25,counter+1
+ 366 0182 0196      		adiw r24,1
+ 367 0184 9093 0000 		sts counter+1,r25
+ 368 0188 8093 0000 		sts counter,r24
+ 100:pedal.c       **** 	if (!active || counter < 5) return;			// Don't run anything if 
+ 369               		.loc 1 100 0
+ 370 018c 8091 0000 		lds r24,active
+ 371 0190 9091 0000 		lds r25,active+1
+ 372 0194 892B      		or r24,r25
+ 373 0196 01F4      		brne .+2
+ 374 0198 00C0      		rjmp .L13
+ 375               		.loc 1 100 0 is_stmt 0 discriminator 2
+ 376 019a 8091 0000 		lds r24,counter
+ 377 019e 9091 0000 		lds r25,counter+1
+ 378 01a2 0597      		sbiw r24,5
+ 379 01a4 04F4      		brge .+2
+ 380 01a6 00C0      		rjmp .L13
+ 101:pedal.c       **** 	active = 0;
+ 381               		.loc 1 101 0 is_stmt 1
+ 382 01a8 1092 0000 		sts active+1,__zero_reg__
+ 383 01ac 1092 0000 		sts active,__zero_reg__
+ 102:pedal.c       **** 	if (PIND & (1 << PD2)) {
+ 384               		.loc 1 102 0
+ 385 01b0 4A9B      		sbis 0x9,2
+ 386 01b2 00C0      		rjmp .L13
+ 103:pedal.c       **** 		taps[index] = remainder + counter * (64 * BOUNCETIME) / 2;
+ 387               		.loc 1 103 0
+ 388 01b4 E091 0000 		lds r30,index
+ 389 01b8 F091 0000 		lds r31,index+1
+ 390 01bc 8091 0000 		lds r24,remainder
+ 391 01c0 9091 0000 		lds r25,remainder+1
+ 392 01c4 6091 0000 		lds r22,counter
+ 393 01c8 7091 0000 		lds r23,counter+1
+ 394 01cc 20E0      		ldi r18,0
+ 395 01ce 34EC      		ldi r19,lo8(-60)
+ 396 01d0 629F      		mul r22,r18
+ 397 01d2 A001      		movw r20,r0
+ 398 01d4 639F      		mul r22,r19
+ 399 01d6 500D      		add r21,r0
+ 400 01d8 729F      		mul r23,r18
+ 401 01da 500D      		add r21,r0
+ 402 01dc 1124      		clr r1
+ 403 01de 840F      		add r24,r20
+ 404 01e0 951F      		adc r25,r21
+ 405 01e2 EE0F      		lsl r30
+ 406 01e4 FF1F      		rol r31
+ 407 01e6 E050      		subi r30,lo8(-(taps))
+ 408 01e8 F040      		sbci r31,hi8(-(taps))
+ 409 01ea 9183      		std Z+1,r25
+ 410 01ec 8083      		st Z,r24
+ 104:pedal.c       **** 		index++;
+ 411               		.loc 1 104 0
+ 412 01ee 8091 0000 		lds r24,index
+ 413 01f2 9091 0000 		lds r25,index+1
+ 414 01f6 0196      		adiw r24,1
+ 415 01f8 9093 0000 		sts index+1,r25
+ 416 01fc 8093 0000 		sts index,r24
+ 105:pedal.c       **** 		quarter = remainder + counter * (64 * BOUNCETIME) / 2;
+ 417               		.loc 1 105 0
+ 418 0200 8091 0000 		lds r24,remainder
+ 419 0204 9091 0000 		lds r25,remainder+1
+ 420 0208 6091 0000 		lds r22,counter
+ 421 020c 7091 0000 		lds r23,counter+1
+ 422 0210 629F      		mul r22,r18
+ 423 0212 A001      		movw r20,r0
+ 424 0214 639F      		mul r22,r19
+ 425 0216 500D      		add r21,r0
+ 426 0218 729F      		mul r23,r18
+ 427 021a 500D      		add r21,r0
+ 428 021c 1124      		clr r1
+ 429 021e 840F      		add r24,r20
+ 430 0220 951F      		adc r25,r21
+ 431 0222 9093 0000 		sts quarter+1,r25
+ 432 0226 8093 0000 		sts quarter,r24
+ 106:pedal.c       **** 		counter = 0;
+ 433               		.loc 1 106 0
+ 434 022a 1092 0000 		sts counter+1,__zero_reg__
+ 435 022e 1092 0000 		sts counter,__zero_reg__
+ 107:pedal.c       **** 		OCR1A 	= quarter / (2 * dbltime * triplet);	// Set timing of signal killer
+ 436               		.loc 1 107 0
+ 437 0232 8091 0000 		lds r24,quarter
+ 438 0236 9091 0000 		lds r25,quarter+1
+ 439 023a 2091 0000 		lds r18,dbltime
+ 440 023e 3091 0000 		lds r19,dbltime+1
+ 441 0242 4091 0000 		lds r20,triplet
+ 442 0246 5091 0000 		lds r21,triplet+1
+ 443 024a 220F      		lsl r18
+ 444 024c 331F      		rol r19
+ 445 024e 249F      		mul r18,r20
+ 446 0250 B001      		movw r22,r0
+ 447 0252 259F      		mul r18,r21
+ 448 0254 700D      		add r23,r0
+ 449 0256 349F      		mul r19,r20
+ 450 0258 700D      		add r23,r0
+ 451 025a 1124      		clr r1
+ 452 025c 0E94 0000 		call __divmodhi4
+ 453 0260 7093 8900 		sts 136+1,r23
+ 454 0264 6093 8800 		sts 136,r22
+ 108:pedal.c       **** 		TCNT1 	= 0;					// reset timer
+ 455               		.loc 1 108 0
+ 456 0268 1092 8500 		sts 132+1,__zero_reg__
+ 457 026c 1092 8400 		sts 132,__zero_reg__
+ 109:pedal.c       **** 		PORTD  ^= (1 << 7);				// Toggle test LED
+ 458               		.loc 1 109 0
+ 459 0270 8BB1      		in r24,0xb
+ 460 0272 8058      		subi r24,lo8(-(-128))
+ 461 0274 8BB9      		out 0xb,r24
+ 110:pedal.c       **** 		PORTB  |= (0 << 1);				// Set initial state of signal killer
+ 462               		.loc 1 110 0
+ 463 0276 85B1      		in r24,0x5
+ 464 0278 85B9      		out 0x5,r24
+ 465               	.L13:
+ 466               	/* epilogue start */
+ 111:pedal.c       **** 	}
+ 112:pedal.c       **** }
+ 467               		.loc 1 112 0
+ 468 027a FF91      		pop r31
+ 469 027c EF91      		pop r30
+ 470 027e BF91      		pop r27
+ 471 0280 AF91      		pop r26
+ 472 0282 9F91      		pop r25
+ 473 0284 8F91      		pop r24
+ 474 0286 7F91      		pop r23
+ 475 0288 6F91      		pop r22
+ 476 028a 5F91      		pop r21
+ 477 028c 4F91      		pop r20
+ 478 028e 3F91      		pop r19
+ 479 0290 2F91      		pop r18
+ 480 0292 0F90      		pop r0
+ 481 0294 0FBE      		out __SREG__,r0
+ 482 0296 0F90      		pop r0
+ 483 0298 1F90      		pop r1
+ 484 029a 1895      		reti
+ 485               	.LFE4:
+ 487               	.global	debounce
+ 489               	debounce:
+ 490               	.LFB5:
+ 113:pedal.c       **** 
+ 114:pedal.c       **** // Switches be sloppy
+ 115:pedal.c       **** void debounce()
+ 116:pedal.c       **** {
+ 491               		.loc 1 116 0
+ 492               	/* prologue: function */
+ 493               	/* frame size = 0 */
+ 494               	/* stack size = 0 */
+ 495               	.L__stack_usage = 0
+ 117:pedal.c       **** 	active    = 1;		// Set active so the interrupt for timer0 knows its good to go 
+ 496               		.loc 1 117 0
+ 497 029c 81E0      		ldi r24,lo8(1)
+ 498 029e 90E0      		ldi r25,0
+ 499 02a0 9093 0000 		sts active+1,r25
+ 500 02a4 8093 0000 		sts active,r24
+ 118:pedal.c       **** 	remainder = TCNT0;	// To be added to quarter
+ 501               		.loc 1 118 0
+ 502 02a8 86B5      		in r24,0x26
+ 503 02aa 90E0      		ldi r25,0
+ 504 02ac 9093 0000 		sts remainder+1,r25
+ 505 02b0 8093 0000 		sts remainder,r24
+ 119:pedal.c       **** 	TCNT0     = 0;		// reset timer0's counter so it fires 2ms from now
+ 506               		.loc 1 119 0
+ 507 02b4 16BC      		out 0x26,__zero_reg__
+ 508 02b6 0895      		ret
+ 509               	.LFE5:
+ 511               	.global	__vector_1
+ 513               	__vector_1:
+ 514               	.LFB3:
+  92:pedal.c       **** {
+ 515               		.loc 1 92 0
+ 516 02b8 1F92      		push r1
+ 517               	.LCFI38:
+ 518 02ba 0F92      		push r0
+ 519               	.LCFI39:
+ 520 02bc 0FB6      		in r0,__SREG__
+ 521 02be 0F92      		push r0
+ 522 02c0 1124      		clr __zero_reg__
+ 523 02c2 2F93      		push r18
+ 524               	.LCFI40:
+ 525 02c4 3F93      		push r19
+ 526               	.LCFI41:
+ 527 02c6 4F93      		push r20
+ 528               	.LCFI42:
+ 529 02c8 5F93      		push r21
+ 530               	.LCFI43:
+ 531 02ca 6F93      		push r22
+ 532               	.LCFI44:
+ 533 02cc 7F93      		push r23
+ 534               	.LCFI45:
+ 535 02ce 8F93      		push r24
+ 536               	.LCFI46:
+ 537 02d0 9F93      		push r25
+ 538               	.LCFI47:
+ 539 02d2 AF93      		push r26
+ 540               	.LCFI48:
+ 541 02d4 BF93      		push r27
+ 542               	.LCFI49:
+ 543 02d6 EF93      		push r30
+ 544               	.LCFI50:
+ 545 02d8 FF93      		push r31
+ 546               	.LCFI51:
+ 547               	/* prologue: Signal */
+ 548               	/* frame size = 0 */
+ 549               	/* stack size = 15 */
+ 550               	.L__stack_usage = 15
+  93:pedal.c       **** 	debounce();
+ 551               		.loc 1 93 0
+ 552 02da 0E94 0000 		call debounce
+ 553               	.LVL6:
+ 554               	/* epilogue start */
+  94:pedal.c       **** }
+ 555               		.loc 1 94 0
+ 556 02de FF91      		pop r31
+ 557 02e0 EF91      		pop r30
+ 558 02e2 BF91      		pop r27
+ 559 02e4 AF91      		pop r26
+ 560 02e6 9F91      		pop r25
+ 561 02e8 8F91      		pop r24
+ 562 02ea 7F91      		pop r23
+ 563 02ec 6F91      		pop r22
+ 564 02ee 5F91      		pop r21
+ 565 02f0 4F91      		pop r20
+ 566 02f2 3F91      		pop r19
+ 567 02f4 2F91      		pop r18
+ 568 02f6 0F90      		pop r0
+ 569 02f8 0FBE      		out __SREG__,r0
+ 570 02fa 0F90      		pop r0
+ 571 02fc 1F90      		pop r1
+ 572 02fe 1895      		reti
+ 573               	.LFE3:
+ 575               		.comm	taps,8,1
+ 576               	.global	index
+ 577               		.section .bss
+ 580               	index:
+ 581 0000 0000      		.zero	2
+ 582               	.global	remainder
+ 585               	remainder:
+ 586 0002 0000      		.zero	2
+ 587               	.global	counter
+ 590               	counter:
+ 591 0004 0000      		.zero	2
+ 592               	.global	active
+ 595               	active:
+ 596 0006 0000      		.zero	2
+ 597               	.global	triplestate
+ 600               	triplestate:
+ 601 0008 0000      		.zero	2
+ 602               	.global	dblstate
+ 605               	dblstate:
+ 606 000a 0000      		.zero	2
+ 607               	.global	dbltime
+ 608               		.data
+ 611               	dbltime:
+ 612 0000 0100      		.word	1
+ 613               	.global	triplet
+ 616               	triplet:
+ 617 0002 0100      		.word	1
+ 618               	.global	quarter
+ 621               	quarter:
+ 622 0004 983A      		.word	15000
+ 623               	.global	BOUNCETIME
+ 624               		.section	.rodata
+ 627               	BOUNCETIME:
+ 628 0000 204E      		.word	20000
+ 1007               	.Letext0:
+ 1008               		.file 2 "/usr/lib/gcc/avr/4.7.0/../../../avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 pedal.c
+     /tmp/ccRU8F1Y.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccRU8F1Y.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccRU8F1Y.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccRU8F1Y.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccRU8F1Y.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccRU8F1Y.s:12     .text.startup:0000000000000000 main
+     /tmp/ccRU8F1Y.s:621    .data:0000000000000004 quarter
+     /tmp/ccRU8F1Y.s:611    .data:0000000000000000 dbltime
+     /tmp/ccRU8F1Y.s:616    .data:0000000000000002 triplet
+     /tmp/ccRU8F1Y.s:109    .text:0000000000000000 __vector_5
+     /tmp/ccRU8F1Y.s:605    .bss:000000000000000a dblstate
+     /tmp/ccRU8F1Y.s:217    .text:00000000000000ac __vector_2
+     /tmp/ccRU8F1Y.s:600    .bss:0000000000000008 triplestate
+     /tmp/ccRU8F1Y.s:325    .text:0000000000000158 __vector_15
+     /tmp/ccRU8F1Y.s:590    .bss:0000000000000004 counter
+     /tmp/ccRU8F1Y.s:595    .bss:0000000000000006 active
+     /tmp/ccRU8F1Y.s:580    .bss:0000000000000000 index
+     /tmp/ccRU8F1Y.s:585    .bss:0000000000000002 remainder
+                            *COM*:0000000000000008 taps
+     /tmp/ccRU8F1Y.s:489    .text:000000000000029c debounce
+     /tmp/ccRU8F1Y.s:513    .text:00000000000002b8 __vector_1
+     /tmp/ccRU8F1Y.s:627    .rodata:0000000000000000 BOUNCETIME
+
+UNDEFINED SYMBOLS
+__divmodhi4
+__do_copy_data
+__do_clear_bss

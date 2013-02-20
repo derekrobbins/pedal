@@ -1,0 +1,646 @@
+
+pedal.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000008  00800100  000004a4  00000538  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         000004a4  00000000  00000000  00000094  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .bss          00000014  00800108  00800108  00000540  2**0
+                  ALLOC
+  3 .stab         000006cc  00000000  00000000  00000540  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  4 .stabstr      00000054  00000000  00000000  00000c0c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .comment      00000011  00000000  00000000  00000c60  2**0
+                  CONTENTS, READONLY
+  6 .debug_aranges 00000028  00000000  00000000  00000c71  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_info   0000021d  00000000  00000000  00000c99  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_abbrev 000000e4  00000000  00000000  00000eb6  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_line   000000d5  00000000  00000000  00000f9a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_frame  0000017c  00000000  00000000  00001070  2**2
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_str    0000011e  00000000  00000000  000011ec  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .debug_loc    00000346  00000000  00000000  0000130a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 13 .debug_ranges 00000018  00000000  00000000  00001650  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
+   4:	0c 94 af 01 	jmp	0x35e	; 0x35e <__vector_1>
+   8:	0c 94 a9 00 	jmp	0x152	; 0x152 <__vector_2>
+   c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  10:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  14:	0c 94 53 00 	jmp	0xa6	; 0xa6 <__vector_5>
+  18:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  1c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  20:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  24:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  28:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  2c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  30:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  34:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  38:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  3c:	0c 94 ff 00 	jmp	0x1fe	; 0x1fe <__vector_15>
+  40:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  44:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  48:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  4c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  50:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  54:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  58:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  5c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  60:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+  64:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
+
+00000068 <__ctors_end>:
+  68:	11 24       	eor	r1, r1
+  6a:	1f be       	out	0x3f, r1	; 63
+  6c:	cf ef       	ldi	r28, 0xFF	; 255
+  6e:	d8 e0       	ldi	r29, 0x08	; 8
+  70:	de bf       	out	0x3e, r29	; 62
+  72:	cd bf       	out	0x3d, r28	; 61
+
+00000074 <__do_copy_data>:
+  74:	11 e0       	ldi	r17, 0x01	; 1
+  76:	a0 e0       	ldi	r26, 0x00	; 0
+  78:	b1 e0       	ldi	r27, 0x01	; 1
+  7a:	e4 ea       	ldi	r30, 0xA4	; 164
+  7c:	f4 e0       	ldi	r31, 0x04	; 4
+  7e:	02 c0       	rjmp	.+4      	; 0x84 <__do_copy_data+0x10>
+  80:	05 90       	lpm	r0, Z+
+  82:	0d 92       	st	X+, r0
+  84:	a8 30       	cpi	r26, 0x08	; 8
+  86:	b1 07       	cpc	r27, r17
+  88:	d9 f7       	brne	.-10     	; 0x80 <__do_copy_data+0xc>
+
+0000008a <__do_clear_bss>:
+  8a:	11 e0       	ldi	r17, 0x01	; 1
+  8c:	a8 e0       	ldi	r26, 0x08	; 8
+  8e:	b1 e0       	ldi	r27, 0x01	; 1
+  90:	01 c0       	rjmp	.+2      	; 0x94 <.do_clear_bss_start>
+
+00000092 <.do_clear_bss_loop>:
+  92:	1d 92       	st	X+, r1
+
+00000094 <.do_clear_bss_start>:
+  94:	ac 31       	cpi	r26, 0x1C	; 28
+  96:	b1 07       	cpc	r27, r17
+  98:	e1 f7       	brne	.-8      	; 0x92 <.do_clear_bss_loop>
+  9a:	0e 94 d3 01 	call	0x3a6	; 0x3a6 <main>
+  9e:	0c 94 50 02 	jmp	0x4a0	; 0x4a0 <_exit>
+
+000000a2 <__bad_interrupt>:
+  a2:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+000000a6 <__vector_5>:
+	while (1);
+}
+
+// Double time switch interrupter for pin 4 of port D
+ISR(PCINT2_vect)
+{
+  a6:	1f 92       	push	r1
+  a8:	0f 92       	push	r0
+  aa:	0f b6       	in	r0, 0x3f	; 63
+  ac:	0f 92       	push	r0
+  ae:	11 24       	eor	r1, r1
+  b0:	2f 93       	push	r18
+  b2:	3f 93       	push	r19
+  b4:	4f 93       	push	r20
+  b6:	5f 93       	push	r21
+  b8:	6f 93       	push	r22
+  ba:	7f 93       	push	r23
+  bc:	8f 93       	push	r24
+  be:	9f 93       	push	r25
+  c0:	af 93       	push	r26
+  c2:	bf 93       	push	r27
+	int newstate = PIND & (1 << PD4);
+  c4:	89 b1       	in	r24, 0x09	; 9
+  c6:	80 71       	andi	r24, 0x10	; 16
+  c8:	90 e0       	ldi	r25, 0x00	; 0
+	if (dblstate != newstate) {
+  ca:	20 91 12 01 	lds	r18, 0x0112
+  ce:	30 91 13 01 	lds	r19, 0x0113
+  d2:	28 17       	cp	r18, r24
+  d4:	39 07       	cpc	r19, r25
+  d6:	71 f1       	breq	.+92     	; 0x134 <__vector_5+0x8e>
+		if (newstate) {
+  d8:	00 97       	sbiw	r24, 0x00	; 0
+  da:	19 f0       	breq	.+6      	; 0xe2 <__vector_5+0x3c>
+			dbltime = 2;
+  dc:	22 e0       	ldi	r18, 0x02	; 2
+  de:	30 e0       	ldi	r19, 0x00	; 0
+  e0:	02 c0       	rjmp	.+4      	; 0xe6 <__vector_5+0x40>
+		} else {
+			dbltime = 1;
+  e2:	21 e0       	ldi	r18, 0x01	; 1
+  e4:	30 e0       	ldi	r19, 0x00	; 0
+  e6:	30 93 01 01 	sts	0x0101, r19
+  ea:	20 93 00 01 	sts	0x0100, r18
+		}
+		dblstate = newstate;
+  ee:	90 93 13 01 	sts	0x0113, r25
+  f2:	80 93 12 01 	sts	0x0112, r24
+		OCR1A 	 = quarter / (2 * dbltime * triplet);	// Set CTC compare value
+  f6:	80 91 04 01 	lds	r24, 0x0104
+  fa:	90 91 05 01 	lds	r25, 0x0105
+  fe:	20 91 00 01 	lds	r18, 0x0100
+ 102:	30 91 01 01 	lds	r19, 0x0101
+ 106:	40 91 02 01 	lds	r20, 0x0102
+ 10a:	50 91 03 01 	lds	r21, 0x0103
+ 10e:	22 0f       	add	r18, r18
+ 110:	33 1f       	adc	r19, r19
+ 112:	24 9f       	mul	r18, r20
+ 114:	b0 01       	movw	r22, r0
+ 116:	25 9f       	mul	r18, r21
+ 118:	70 0d       	add	r23, r0
+ 11a:	34 9f       	mul	r19, r20
+ 11c:	70 0d       	add	r23, r0
+ 11e:	11 24       	eor	r1, r1
+ 120:	0e 94 28 02 	call	0x450	; 0x450 <__divmodhi4>
+ 124:	70 93 89 00 	sts	0x0089, r23
+ 128:	60 93 88 00 	sts	0x0088, r22
+		TCNT1 	 = 0;
+ 12c:	10 92 85 00 	sts	0x0085, r1
+ 130:	10 92 84 00 	sts	0x0084, r1
+	}
+}
+ 134:	bf 91       	pop	r27
+ 136:	af 91       	pop	r26
+ 138:	9f 91       	pop	r25
+ 13a:	8f 91       	pop	r24
+ 13c:	7f 91       	pop	r23
+ 13e:	6f 91       	pop	r22
+ 140:	5f 91       	pop	r21
+ 142:	4f 91       	pop	r20
+ 144:	3f 91       	pop	r19
+ 146:	2f 91       	pop	r18
+ 148:	0f 90       	pop	r0
+ 14a:	0f be       	out	0x3f, r0	; 63
+ 14c:	0f 90       	pop	r0
+ 14e:	1f 90       	pop	r1
+ 150:	18 95       	reti
+
+00000152 <__vector_2>:
+
+// Triplet switch interrupter for pin 3 of port D
+ISR(INT1_vect)
+{
+ 152:	1f 92       	push	r1
+ 154:	0f 92       	push	r0
+ 156:	0f b6       	in	r0, 0x3f	; 63
+ 158:	0f 92       	push	r0
+ 15a:	11 24       	eor	r1, r1
+ 15c:	2f 93       	push	r18
+ 15e:	3f 93       	push	r19
+ 160:	4f 93       	push	r20
+ 162:	5f 93       	push	r21
+ 164:	6f 93       	push	r22
+ 166:	7f 93       	push	r23
+ 168:	8f 93       	push	r24
+ 16a:	9f 93       	push	r25
+ 16c:	af 93       	push	r26
+ 16e:	bf 93       	push	r27
+	int newstate = PIND & (1 << PD3);
+ 170:	89 b1       	in	r24, 0x09	; 9
+ 172:	88 70       	andi	r24, 0x08	; 8
+ 174:	90 e0       	ldi	r25, 0x00	; 0
+	if (triplestate != newstate) {
+ 176:	20 91 10 01 	lds	r18, 0x0110
+ 17a:	30 91 11 01 	lds	r19, 0x0111
+ 17e:	28 17       	cp	r18, r24
+ 180:	39 07       	cpc	r19, r25
+ 182:	71 f1       	breq	.+92     	; 0x1e0 <__vector_2+0x8e>
+		if (newstate) {
+ 184:	00 97       	sbiw	r24, 0x00	; 0
+ 186:	19 f0       	breq	.+6      	; 0x18e <__vector_2+0x3c>
+			triplet = 3;
+ 188:	23 e0       	ldi	r18, 0x03	; 3
+ 18a:	30 e0       	ldi	r19, 0x00	; 0
+ 18c:	02 c0       	rjmp	.+4      	; 0x192 <__vector_2+0x40>
+		} else {
+			triplet = 1;
+ 18e:	21 e0       	ldi	r18, 0x01	; 1
+ 190:	30 e0       	ldi	r19, 0x00	; 0
+ 192:	30 93 03 01 	sts	0x0103, r19
+ 196:	20 93 02 01 	sts	0x0102, r18
+		}
+		triplestate = newstate;
+ 19a:	90 93 11 01 	sts	0x0111, r25
+ 19e:	80 93 10 01 	sts	0x0110, r24
+		OCR1A 	    = quarter / (2 * dbltime * triplet);	// Set CTC compare value
+ 1a2:	80 91 04 01 	lds	r24, 0x0104
+ 1a6:	90 91 05 01 	lds	r25, 0x0105
+ 1aa:	20 91 00 01 	lds	r18, 0x0100
+ 1ae:	30 91 01 01 	lds	r19, 0x0101
+ 1b2:	40 91 02 01 	lds	r20, 0x0102
+ 1b6:	50 91 03 01 	lds	r21, 0x0103
+ 1ba:	22 0f       	add	r18, r18
+ 1bc:	33 1f       	adc	r19, r19
+ 1be:	24 9f       	mul	r18, r20
+ 1c0:	b0 01       	movw	r22, r0
+ 1c2:	25 9f       	mul	r18, r21
+ 1c4:	70 0d       	add	r23, r0
+ 1c6:	34 9f       	mul	r19, r20
+ 1c8:	70 0d       	add	r23, r0
+ 1ca:	11 24       	eor	r1, r1
+ 1cc:	0e 94 28 02 	call	0x450	; 0x450 <__divmodhi4>
+ 1d0:	70 93 89 00 	sts	0x0089, r23
+ 1d4:	60 93 88 00 	sts	0x0088, r22
+		TCNT1       = 0;
+ 1d8:	10 92 85 00 	sts	0x0085, r1
+ 1dc:	10 92 84 00 	sts	0x0084, r1
+	}
+}
+ 1e0:	bf 91       	pop	r27
+ 1e2:	af 91       	pop	r26
+ 1e4:	9f 91       	pop	r25
+ 1e6:	8f 91       	pop	r24
+ 1e8:	7f 91       	pop	r23
+ 1ea:	6f 91       	pop	r22
+ 1ec:	5f 91       	pop	r21
+ 1ee:	4f 91       	pop	r20
+ 1f0:	3f 91       	pop	r19
+ 1f2:	2f 91       	pop	r18
+ 1f4:	0f 90       	pop	r0
+ 1f6:	0f be       	out	0x3f, r0	; 63
+ 1f8:	0f 90       	pop	r0
+ 1fa:	1f 90       	pop	r1
+ 1fc:	18 95       	reti
+
+000001fe <__vector_15>:
+	debounce();
+}
+
+// Debounce interruptor, fires BOUNCETIME cycles after initial tempo interrupter
+ISR(TIMER0_COMPB_vect)
+{
+ 1fe:	1f 92       	push	r1
+ 200:	0f 92       	push	r0
+ 202:	0f b6       	in	r0, 0x3f	; 63
+ 204:	0f 92       	push	r0
+ 206:	11 24       	eor	r1, r1
+ 208:	2f 93       	push	r18
+ 20a:	3f 93       	push	r19
+ 20c:	4f 93       	push	r20
+ 20e:	5f 93       	push	r21
+ 210:	6f 93       	push	r22
+ 212:	7f 93       	push	r23
+ 214:	8f 93       	push	r24
+ 216:	9f 93       	push	r25
+ 218:	af 93       	push	r26
+ 21a:	bf 93       	push	r27
+ 21c:	ef 93       	push	r30
+ 21e:	ff 93       	push	r31
+	counter++;
+ 220:	80 91 0c 01 	lds	r24, 0x010C
+ 224:	90 91 0d 01 	lds	r25, 0x010D
+ 228:	01 96       	adiw	r24, 0x01	; 1
+ 22a:	90 93 0d 01 	sts	0x010D, r25
+ 22e:	80 93 0c 01 	sts	0x010C, r24
+	if (!active || counter < 5) return;			// Don't run anything if 
+ 232:	80 91 0e 01 	lds	r24, 0x010E
+ 236:	90 91 0f 01 	lds	r25, 0x010F
+ 23a:	89 2b       	or	r24, r25
+ 23c:	09 f4       	brne	.+2      	; 0x240 <__vector_15+0x42>
+ 23e:	70 c0       	rjmp	.+224    	; 0x320 <__vector_15+0x122>
+ 240:	80 91 0c 01 	lds	r24, 0x010C
+ 244:	90 91 0d 01 	lds	r25, 0x010D
+ 248:	05 97       	sbiw	r24, 0x05	; 5
+ 24a:	0c f4       	brge	.+2      	; 0x24e <__vector_15+0x50>
+ 24c:	69 c0       	rjmp	.+210    	; 0x320 <__vector_15+0x122>
+	active = 0;
+ 24e:	10 92 0f 01 	sts	0x010F, r1
+ 252:	10 92 0e 01 	sts	0x010E, r1
+	if (PIND & (1 << PD2)) {
+ 256:	4a 9b       	sbis	0x09, 2	; 9
+ 258:	63 c0       	rjmp	.+198    	; 0x320 <__vector_15+0x122>
+		taps[index] = remainder + counter * (64 * BOUNCETIME) / 2;
+ 25a:	e0 91 08 01 	lds	r30, 0x0108
+ 25e:	f0 91 09 01 	lds	r31, 0x0109
+ 262:	80 91 0a 01 	lds	r24, 0x010A
+ 266:	90 91 0b 01 	lds	r25, 0x010B
+ 26a:	60 91 0c 01 	lds	r22, 0x010C
+ 26e:	70 91 0d 01 	lds	r23, 0x010D
+ 272:	20 e0       	ldi	r18, 0x00	; 0
+ 274:	34 ec       	ldi	r19, 0xC4	; 196
+ 276:	62 9f       	mul	r22, r18
+ 278:	a0 01       	movw	r20, r0
+ 27a:	63 9f       	mul	r22, r19
+ 27c:	50 0d       	add	r21, r0
+ 27e:	72 9f       	mul	r23, r18
+ 280:	50 0d       	add	r21, r0
+ 282:	11 24       	eor	r1, r1
+ 284:	84 0f       	add	r24, r20
+ 286:	95 1f       	adc	r25, r21
+ 288:	ee 0f       	add	r30, r30
+ 28a:	ff 1f       	adc	r31, r31
+ 28c:	ec 5e       	subi	r30, 0xEC	; 236
+ 28e:	fe 4f       	sbci	r31, 0xFE	; 254
+ 290:	91 83       	std	Z+1, r25	; 0x01
+ 292:	80 83       	st	Z, r24
+		index++;
+ 294:	80 91 08 01 	lds	r24, 0x0108
+ 298:	90 91 09 01 	lds	r25, 0x0109
+ 29c:	01 96       	adiw	r24, 0x01	; 1
+ 29e:	90 93 09 01 	sts	0x0109, r25
+ 2a2:	80 93 08 01 	sts	0x0108, r24
+		quarter = remainder + counter * (64 * BOUNCETIME) / 2;
+ 2a6:	80 91 0a 01 	lds	r24, 0x010A
+ 2aa:	90 91 0b 01 	lds	r25, 0x010B
+ 2ae:	60 91 0c 01 	lds	r22, 0x010C
+ 2b2:	70 91 0d 01 	lds	r23, 0x010D
+ 2b6:	62 9f       	mul	r22, r18
+ 2b8:	a0 01       	movw	r20, r0
+ 2ba:	63 9f       	mul	r22, r19
+ 2bc:	50 0d       	add	r21, r0
+ 2be:	72 9f       	mul	r23, r18
+ 2c0:	50 0d       	add	r21, r0
+ 2c2:	11 24       	eor	r1, r1
+ 2c4:	84 0f       	add	r24, r20
+ 2c6:	95 1f       	adc	r25, r21
+ 2c8:	90 93 05 01 	sts	0x0105, r25
+ 2cc:	80 93 04 01 	sts	0x0104, r24
+		counter = 0;
+ 2d0:	10 92 0d 01 	sts	0x010D, r1
+ 2d4:	10 92 0c 01 	sts	0x010C, r1
+		OCR1A 	= quarter / (2 * dbltime * triplet);	// Set timing of signal killer
+ 2d8:	80 91 04 01 	lds	r24, 0x0104
+ 2dc:	90 91 05 01 	lds	r25, 0x0105
+ 2e0:	20 91 00 01 	lds	r18, 0x0100
+ 2e4:	30 91 01 01 	lds	r19, 0x0101
+ 2e8:	40 91 02 01 	lds	r20, 0x0102
+ 2ec:	50 91 03 01 	lds	r21, 0x0103
+ 2f0:	22 0f       	add	r18, r18
+ 2f2:	33 1f       	adc	r19, r19
+ 2f4:	24 9f       	mul	r18, r20
+ 2f6:	b0 01       	movw	r22, r0
+ 2f8:	25 9f       	mul	r18, r21
+ 2fa:	70 0d       	add	r23, r0
+ 2fc:	34 9f       	mul	r19, r20
+ 2fe:	70 0d       	add	r23, r0
+ 300:	11 24       	eor	r1, r1
+ 302:	0e 94 28 02 	call	0x450	; 0x450 <__divmodhi4>
+ 306:	70 93 89 00 	sts	0x0089, r23
+ 30a:	60 93 88 00 	sts	0x0088, r22
+		TCNT1 	= 0;					// reset timer
+ 30e:	10 92 85 00 	sts	0x0085, r1
+ 312:	10 92 84 00 	sts	0x0084, r1
+		PORTD  ^= (1 << 7);				// Toggle test LED
+ 316:	8b b1       	in	r24, 0x0b	; 11
+ 318:	80 58       	subi	r24, 0x80	; 128
+ 31a:	8b b9       	out	0x0b, r24	; 11
+		PORTB  |= (0 << 1);				// Set initial state of signal killer
+ 31c:	85 b1       	in	r24, 0x05	; 5
+ 31e:	85 b9       	out	0x05, r24	; 5
+	}
+}
+ 320:	ff 91       	pop	r31
+ 322:	ef 91       	pop	r30
+ 324:	bf 91       	pop	r27
+ 326:	af 91       	pop	r26
+ 328:	9f 91       	pop	r25
+ 32a:	8f 91       	pop	r24
+ 32c:	7f 91       	pop	r23
+ 32e:	6f 91       	pop	r22
+ 330:	5f 91       	pop	r21
+ 332:	4f 91       	pop	r20
+ 334:	3f 91       	pop	r19
+ 336:	2f 91       	pop	r18
+ 338:	0f 90       	pop	r0
+ 33a:	0f be       	out	0x3f, r0	; 63
+ 33c:	0f 90       	pop	r0
+ 33e:	1f 90       	pop	r1
+ 340:	18 95       	reti
+
+00000342 <debounce>:
+
+// Switches be sloppy
+void debounce()
+{
+ 342:	81 e0       	ldi	r24, 0x01	; 1
+ 344:	90 e0       	ldi	r25, 0x00	; 0
+ 346:	90 93 0f 01 	sts	0x010F, r25
+ 34a:	80 93 0e 01 	sts	0x010E, r24
+	active    = 1;		// Set active so the interrupt for timer0 knows its good to go 
+	remainder = TCNT0;	// To be added to quarter
+ 34e:	86 b5       	in	r24, 0x26	; 38
+ 350:	90 e0       	ldi	r25, 0x00	; 0
+ 352:	90 93 0b 01 	sts	0x010B, r25
+ 356:	80 93 0a 01 	sts	0x010A, r24
+	TCNT0     = 0;		// reset timer0's counter so it fires 2ms from now
+ 35a:	16 bc       	out	0x26, r1	; 38
+ 35c:	08 95       	ret
+
+0000035e <__vector_1>:
+	}
+}
+
+// Tap tempo interrupter for pin 2 of port D
+ISR(INT0_vect)
+{
+ 35e:	1f 92       	push	r1
+ 360:	0f 92       	push	r0
+ 362:	0f b6       	in	r0, 0x3f	; 63
+ 364:	0f 92       	push	r0
+ 366:	11 24       	eor	r1, r1
+ 368:	2f 93       	push	r18
+ 36a:	3f 93       	push	r19
+ 36c:	4f 93       	push	r20
+ 36e:	5f 93       	push	r21
+ 370:	6f 93       	push	r22
+ 372:	7f 93       	push	r23
+ 374:	8f 93       	push	r24
+ 376:	9f 93       	push	r25
+ 378:	af 93       	push	r26
+ 37a:	bf 93       	push	r27
+ 37c:	ef 93       	push	r30
+ 37e:	ff 93       	push	r31
+	debounce();
+ 380:	0e 94 a1 01 	call	0x342	; 0x342 <debounce>
+}
+ 384:	ff 91       	pop	r31
+ 386:	ef 91       	pop	r30
+ 388:	bf 91       	pop	r27
+ 38a:	af 91       	pop	r26
+ 38c:	9f 91       	pop	r25
+ 38e:	8f 91       	pop	r24
+ 390:	7f 91       	pop	r23
+ 392:	6f 91       	pop	r22
+ 394:	5f 91       	pop	r21
+ 396:	4f 91       	pop	r20
+ 398:	3f 91       	pop	r19
+ 39a:	2f 91       	pop	r18
+ 39c:	0f 90       	pop	r0
+ 39e:	0f be       	out	0x3f, r0	; 63
+ 3a0:	0f 90       	pop	r0
+ 3a2:	1f 90       	pop	r1
+ 3a4:	18 95       	reti
+
+000003a6 <main>:
+void main(void)
+{
+	/*
+	Setup timer0 as debounbe timer. Timer is set to roughly 2ms.
+	*/
+	OCR0B	|= BOUNCETIME;				// Set compare register B to 2ms
+ 3a6:	88 b5       	in	r24, 0x28	; 40
+ 3a8:	80 62       	ori	r24, 0x20	; 32
+ 3aa:	88 bd       	out	0x28, r24	; 40
+	TIMSK0	|= (1 << OCIE1B);			// Fire interrupter when timer0 reaches the time set in compare register B
+ 3ac:	80 91 6e 00 	lds	r24, 0x006E
+ 3b0:	84 60       	ori	r24, 0x04	; 4
+ 3b2:	80 93 6e 00 	sts	0x006E, r24
+	TCCR0B 	|= (1 << WGM12);			// Set timer 0 to "Clear Timer on Compare" Mode
+ 3b6:	85 b5       	in	r24, 0x25	; 37
+ 3b8:	88 60       	ori	r24, 0x08	; 8
+ 3ba:	85 bd       	out	0x25, r24	; 37
+	TCCR0B 	|= (1 << CS10);				// Start timer
+ 3bc:	85 b5       	in	r24, 0x25	; 37
+ 3be:	81 60       	ori	r24, 0x01	; 1
+ 3c0:	85 bd       	out	0x25, r24	; 37
+
+	/*
+	Setup timer1 as main timer to control signal output. This timer is based
+	around the quarter note tempo tapped in via pin 2 of port D
+	*/
+	OCR1A 	 = quarter / (4 * dbltime * triplet);	// Set CTC compare value
+ 3c2:	80 91 04 01 	lds	r24, 0x0104
+ 3c6:	90 91 05 01 	lds	r25, 0x0105
+ 3ca:	20 91 00 01 	lds	r18, 0x0100
+ 3ce:	30 91 01 01 	lds	r19, 0x0101
+ 3d2:	40 91 02 01 	lds	r20, 0x0102
+ 3d6:	50 91 03 01 	lds	r21, 0x0103
+ 3da:	22 0f       	add	r18, r18
+ 3dc:	33 1f       	adc	r19, r19
+ 3de:	22 0f       	add	r18, r18
+ 3e0:	33 1f       	adc	r19, r19
+ 3e2:	24 9f       	mul	r18, r20
+ 3e4:	b0 01       	movw	r22, r0
+ 3e6:	25 9f       	mul	r18, r21
+ 3e8:	70 0d       	add	r23, r0
+ 3ea:	34 9f       	mul	r19, r20
+ 3ec:	70 0d       	add	r23, r0
+ 3ee:	11 24       	eor	r1, r1
+ 3f0:	0e 94 28 02 	call	0x450	; 0x450 <__divmodhi4>
+ 3f4:	70 93 89 00 	sts	0x0089, r23
+ 3f8:	60 93 88 00 	sts	0x0088, r22
+	TCCR1A 	|= (1 << COM1A0);			// Set timer 1 compare output channel A in toggle mode
+ 3fc:	80 91 80 00 	lds	r24, 0x0080
+ 400:	80 64       	ori	r24, 0x40	; 64
+ 402:	80 93 80 00 	sts	0x0080, r24
+	TCCR1B 	|= ((1 << CS10) | (1 << CS11));		// Start timer at frequency/64
+ 406:	80 91 81 00 	lds	r24, 0x0081
+ 40a:	83 60       	ori	r24, 0x03	; 3
+ 40c:	80 93 81 00 	sts	0x0081, r24
+	TCCR1B 	|= (1 << WGM12);			// Set timer 1 to "Clear Timer on Compare" Mode
+ 410:	80 91 81 00 	lds	r24, 0x0081
+ 414:	88 60       	ori	r24, 0x08	; 8
+ 416:	80 93 81 00 	sts	0x0081, r24
+
+	/*
+	Set up I/O pins
+	*/
+	// Port B
+	DDRB 	|= (1 << 1);				// Set pin 1 of port B as output
+ 41a:	21 9a       	sbi	0x04, 1	; 4
+	PORTB 	|= (1 << 0);				// Set pin 0 of port B to on state
+ 41c:	28 9a       	sbi	0x05, 0	; 5
+	// Port D
+	DDRD 	|= 0b11100011;				// Set pins 2, 3, and 4 of port D as input, everything else to output
+ 41e:	8a b1       	in	r24, 0x0a	; 10
+ 420:	83 6e       	ori	r24, 0xE3	; 227
+ 422:	8a b9       	out	0x0a, r24	; 10
+	PORTD	|= (0 << 7);				// Set pin 7 of port D to off state
+ 424:	8b b1       	in	r24, 0x0b	; 11
+ 426:	8b b9       	out	0x0b, r24	; 11
+
+	EIMSK	|= (1 << INT0) | (1 << INT1);		// Enable INT0 and INT 1 (pins 2 and 3 of port D)
+ 428:	8d b3       	in	r24, 0x1d	; 29
+ 42a:	83 60       	ori	r24, 0x03	; 3
+ 42c:	8d bb       	out	0x1d, r24	; 29
+	EICRA	|= (1 << ISC00) | (1 << ISC10);		// Trigger on rising edge of INT0 and state change of INT 1
+ 42e:	80 91 69 00 	lds	r24, 0x0069
+ 432:	85 60       	ori	r24, 0x05	; 5
+ 434:	80 93 69 00 	sts	0x0069, r24
+	PCMSK2  |= (1 << PCINT20);			// Enable interuptor on PCINT20 (pin 4 of port D)
+ 438:	80 91 6d 00 	lds	r24, 0x006D
+ 43c:	80 61       	ori	r24, 0x10	; 16
+ 43e:	80 93 6d 00 	sts	0x006D, r24
+	PCICR	|= (1 << PCIE2); 
+ 442:	80 91 68 00 	lds	r24, 0x0068
+ 446:	84 60       	ori	r24, 0x04	; 4
+ 448:	80 93 68 00 	sts	0x0068, r24
+
+	sei();						// Globally enable interrupts
+ 44c:	78 94       	sei
+ 44e:	ff cf       	rjmp	.-2      	; 0x44e <main+0xa8>
+
+00000450 <__divmodhi4>:
+ 450:	97 fb       	bst	r25, 7
+ 452:	07 2e       	mov	r0, r23
+ 454:	16 f4       	brtc	.+4      	; 0x45a <__divmodhi4+0xa>
+ 456:	00 94       	com	r0
+ 458:	07 d0       	rcall	.+14     	; 0x468 <__divmodhi4_neg1>
+ 45a:	77 fd       	sbrc	r23, 7
+ 45c:	09 d0       	rcall	.+18     	; 0x470 <__divmodhi4_neg2>
+ 45e:	0e 94 3c 02 	call	0x478	; 0x478 <__udivmodhi4>
+ 462:	07 fc       	sbrc	r0, 7
+ 464:	05 d0       	rcall	.+10     	; 0x470 <__divmodhi4_neg2>
+ 466:	3e f4       	brtc	.+14     	; 0x476 <__divmodhi4_exit>
+
+00000468 <__divmodhi4_neg1>:
+ 468:	90 95       	com	r25
+ 46a:	81 95       	neg	r24
+ 46c:	9f 4f       	sbci	r25, 0xFF	; 255
+ 46e:	08 95       	ret
+
+00000470 <__divmodhi4_neg2>:
+ 470:	70 95       	com	r23
+ 472:	61 95       	neg	r22
+ 474:	7f 4f       	sbci	r23, 0xFF	; 255
+
+00000476 <__divmodhi4_exit>:
+ 476:	08 95       	ret
+
+00000478 <__udivmodhi4>:
+ 478:	aa 1b       	sub	r26, r26
+ 47a:	bb 1b       	sub	r27, r27
+ 47c:	51 e1       	ldi	r21, 0x11	; 17
+ 47e:	07 c0       	rjmp	.+14     	; 0x48e <__udivmodhi4_ep>
+
+00000480 <__udivmodhi4_loop>:
+ 480:	aa 1f       	adc	r26, r26
+ 482:	bb 1f       	adc	r27, r27
+ 484:	a6 17       	cp	r26, r22
+ 486:	b7 07       	cpc	r27, r23
+ 488:	10 f0       	brcs	.+4      	; 0x48e <__udivmodhi4_ep>
+ 48a:	a6 1b       	sub	r26, r22
+ 48c:	b7 0b       	sbc	r27, r23
+
+0000048e <__udivmodhi4_ep>:
+ 48e:	88 1f       	adc	r24, r24
+ 490:	99 1f       	adc	r25, r25
+ 492:	5a 95       	dec	r21
+ 494:	a9 f7       	brne	.-22     	; 0x480 <__udivmodhi4_loop>
+ 496:	80 95       	com	r24
+ 498:	90 95       	com	r25
+ 49a:	bc 01       	movw	r22, r24
+ 49c:	cd 01       	movw	r24, r26
+ 49e:	08 95       	ret
+
+000004a0 <_exit>:
+ 4a0:	f8 94       	cli
+
+000004a2 <__stop_program>:
+ 4a2:	ff cf       	rjmp	.-2      	; 0x4a2 <__stop_program>
